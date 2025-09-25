@@ -9,4 +9,4 @@ async def reproduzir_voz(texto):
     playsound.playsound("audio.mp3")
 
 if __name__ == "__main__":
-    asyncio.run(reproduzir_voz("Olá, o Microsoft Edge."))
+    asyncio.run(reproduzir_voz("Olá, meu nome é fulanodetal"))

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Áudio - Python + HTML</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            z-index: 10;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-start {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-stop {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .visualizer-container {
+            width: 90vw;
+            max-width: 1200px;
+            height: 400px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .status-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .connection-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .connected {
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        .disconnected {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .volume-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #FFC107, #f44336);
+            width: 0%;
+            transition: width 0.1s ease;
+            border-radius: 10px;
+        }
+
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            max-width: 250px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Visualizador de Áudio</h1>
+            <p>Interface HTML + Backend Python</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-start" id="startBtn" onclick="startAudio()">▶️ Iniciar</button>
+            <button class="btn btn-stop" id="stopBtn" onclick="stopAudio()" disabled>⏹️ Parar</button>
+        </div>
+
+        <div class="visualizer-container">
+            <div class="canvas-container">
+                <canvas id="waveCanvas" width="1200" height="400"></canvas>
+            </div>
+            
+            <div class="volume-bar">
+                <div class="volume-fill" id="volumeFill"></div>
+            </div>
+
+            <div class="info-panel">
+                <div><strong>Status:</strong> <span id="audioStatus">Parado</span></div>
+                <div><strong>Volume:</strong> <span id="volumeText">0%</span></div>
+                <div><strong>FPS:</strong> <span id="fpsCounter">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span class="connection-status disconnected" id="connectionStatus"></span>
+        <span id="connectionText">Desconectado</span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script>
+        // Inicialização
+        const socket = io();
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Variáveis globais
+        let isRecording = false;
+        let animationId;
+        let waveData = [];
+        let spectrumData = [];
+        let currentVolume = 0;
+        let frameCount = 0;
+        let lastTime = Date.now();
+
+        // Configurações do canvas
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        // Eventos WebSocket
+        socket.on('connect', () => {
+            updateConnectionStatus(true);
+            console.log('Conectado ao servidor Python');
+        });
+
+        socket.on('disconnect', () => {
+            updateConnectionStatus(false);
+            console.log('Desconectado do servidor');
+        });
+
+        socket.on('audio_data', (data) => {
+            waveData = data.waveform || [];
+            spectrumData = data.spectrum || [];
+            currentVolume = data.volume || 0;
+            updateVolumeDisplay(currentVolume);
+        });
+
+        socket.on('audio_status', (data) => {
+            document.getElementById('audioStatus').textContent = 
+                data.status === 'started' ? 'Gravando' : 'Parado';
+        });
+
+        // Funções de controle
+        function startAudio() {
+            socket.emit('start_audio');
+            isRecording = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            startVisualization();
+        }
+
+        function stopAudio() {
+            socket.emit('stop_audio');
+            isRecording = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            stopVisualization();
+        }
+
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            const text = document.getElementById('connectionText');
+            
+            if (connected) {
+                status.className = 'connection-status connected';
+                text.textContent = 'Conectado';
+            } else {
+                status.className = 'connection-status disconnected';
+                text.textContent = 'Desconectado';
+            }
+        }
+
+        function updateVolumeDisplay(volume) {
+            const fill = document.getElementById('volumeFill');
+            const text = document.getElementById('volumeText');
+            
+            fill.style.width = Math.min(volume, 100) + '%';
+            text.textContent = Math.round(volume) + '%';
+        }
+
+        // Visualização
+        function startVisualization() {
+            draw();
+        }
+
+        function stopVisualization() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            clearCanvas();
+        }
+
+        function draw() {
+            if (!isRecording) return;
+
+            clearCanvas();
+            
+            // Calcular FPS
+            frameCount++;
+            const currentTime = Date.now();
+            if (currentTime - lastTime >= 1000) {
+                document.getElementById('fpsCounter').textContent = frameCount;
+                frameCount = 0;
+                lastTime = currentTime;
+            }
+
+            // Desenhar forma de onda
+            if (waveData.length > 0) {
+                drawWaveform();
+            }
+
+            // Desenhar espectro de frequência
+            if (spectrumData.length > 0) {
+                drawSpectrum();
+            }
+
+            animationId = requestAnimationFrame(draw);
+        }
+
+        function drawWaveform() {
+            const centerY = canvas.height / 3;
+            const width = canvas.width;
+            const height = 80;
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#4CAF50';
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i < waveData.length; i++) {
+                const x = (i / waveData.length) * width;
+                const y = centerY + (waveData[i] / 32768) * height;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+
+            // Título
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.font = '16px Arial';
+            ctx.fillText('Forma de Onda', 20, centerY - 50);
+        }
+
+        function drawSpectrum() {
+            const startY = canvas.height - 180;
+            const barWidth = canvas.width / spectrumData.length;
+            const maxHeight = 120;
+
+            for (let i = 0; i < spectrumData.length; i++) {
+                const barHeight = (spectrumData[i]) * maxHeight;
+                const x = i * barWidth;
+                const y = startY + maxHeight - barHeight;
+
+                // Gradient colorido baseado na frequência
+                const gradient = ctx.createLinearGradient(0, startY + maxHeight, 0, startY);
+                const hue = (i / spectrumData.length) * 300; // Arco-íris
+                gradient.addColorStop(0, `hsla(${hue}, 70%, 50%, 0.8)`);
+                gradient.addColorStop(1, `hsla(${hue}, 70%, 70%, 1)`);
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, barWidth - 2, barHeight);
+                
+                // Reflexo no fundo
+                ctx.fillStyle = `hsla(${hue}, 70%, 50%, 0.2)`;
+                ctx.fillRect(x, startY + maxHeight + 5, barWidth - 2, barHeight * 0.3);
+            }
+
+            // Título
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('📊 Espectro de Frequência', 20, startY - 10);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Background gradiente
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(0,0,0,0.1)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0.3)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Redimensionamento responsivo
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        });
+
+        // Inicialização
+        clearCanvas();
+    </script>
+</body>
+</html>

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>''
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema 80s Wave</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0d2e 50%, #16213e 100%);
+            color: #00ffff;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Grid pattern background */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            grid-template-areas: 
+                "gps . ring1 ring2 ring3"
+                "gps video video video ."
+                "gps video video video ."
+                "freq freq freq freq freq"
+                "music music music music music";
+            grid-template-rows: 120px 1fr 1fr 80px 60px;
+            grid-template-columns: 250px 1fr 120px 120px 120px;
+            gap: 10px;
+            padding: 15px;
+        }
+
+        /* GPS Location Window */
+        .gps-window {
+            grid-area: gps;
+            background: linear-gradient(145deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gps-window::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff);
+            z-index: -1;
+            border-radius: 10px;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        .gps-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .gps-coords {
+            font-size: 12px;
+            line-height: 1.4;
+            color: #ffffff;
+        }
+
+        .gps-map {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(45deg, #001122, #003344);
+            border: 1px solid #00ffff;
+            border-radius: 5px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gps-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: #ff0080;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px #ff0080;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        /* Loading Rings */
+        .ring-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .ring1 { grid-area: ring1; }
+        .ring2 { grid-area: ring2; }
+        .ring3 { grid-area: ring3; }
+
+        .loading-ring {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .ring-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: rgba(0, 255, 255, 0.2);
+            stroke-width: 8;
+        }
+
+        .ring-progress {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.3s ease, stroke 0.3s ease;
+        }
+
+        .ring-value {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        .ring-label {
+            font-size: 12px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        /* Video Display */
+        .video-display {
+            grid-area: video;
+            background: linear-gradient(135deg, #000011, #001122);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+            display: none;
+        }
+
+        .video-display.active {
+            display: block;
+        }
+
+        .video-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 255, 0.05) 2px,
+                rgba(0, 255, 255, 0.05) 4px
+            );
+            animation: scanlines 0.1s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Audio Frequency Bars */
+        .frequency-display {
+            grid-area: freq;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 10px;
+            gap: 2px;
+            overflow: hidden;
+        }
+
+        .freq-bar {
+            width: 4px;
+            background: linear-gradient(to top, #00ffff, #ff00ff, #ffff00);
+            border-radius: 2px 2px 0 0;
+            transition: height 0.1s ease;
+            min-height: 2px;
+            animation: frequencyPulse 0.3s ease-in-out infinite alternate;
+        }
+
+        @keyframes frequencyPulse {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* Music Player */
+        .music-player {
+            grid-area: music;
+            background: linear-gradient(90deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 10px 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .music-player.active {
+            display: flex;
+        }
+
+        .music-left {
+            flex: 1;
+            font-size: 12px;
+            color: #ffffff;
+        }
+
+        .music-center {
+            flex: 2;
+            text-align: center;
+        }
+
+        .music-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 2px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .music-artist {
+            font-size: 12px;
+            color: #ffffff;
+            opacity: 0.8;
+        }
+
+        .music-right {
+            flex: 1;
+            text-align: right;
+            font-size: 12px;
+            color: #ffffff;
+        }
+
+        .time-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(0, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            width: 45%;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 200px 1fr 100px 100px 100px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-areas: 
+                    "gps ring1 ring2 ring3"
+                    "video video video video"
+                    "freq freq freq freq"
+                    "music music music music";
+                grid-template-rows: 100px 1fr 80px 60px;
+                grid-template-columns: 180px 1fr 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                grid-template-areas: 
+                    "gps gps ring1 ring2"
+                    "video video video ring3"
+                    "freq freq freq freq"
+                    "music music music music";
+                grid-template-rows: 80px 1fr 60px 50px;
+                gap: 5px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- GPS Location Window -->
+        <div class="gps-window">
+            <div class="gps-title">LOCALIZAÇÃO GPS</div>
+            <div class="gps-coords">
+                <div>LAT: -21.1677° S</div>
+                <div>LON: -47.5862° W</div>
+                <div>ALT: 515m</div>
+                <div>VEL: 0 km/h</div>
+            </div>
+            <div class="gps-map">
+                <div class="gps-dot"></div>
+            </div>
+        </div>
+
+        <!-- Loading Ring 1 -->
+        <div class="ring-container ring1">
+            <div class="loading-ring">
+                <svg class="ring-svg" viewBox="0 0 80 80">
+                    <circle class="ring-bg" cx="40" cy="40" r="36"></circle>
+                    <circle class="ring-progress" cx="40" cy="40" r="36" 
+                            stroke="#00ffff" 
+                            stroke-dasharray="0 226.19"
+                            id="ring1-progress"></circle>
+                </svg>
+            </div>
+            <div class="ring-value" id="ring1-value">0</div>
+            <div class="ring-label">SISTEMA A</div>
+        </div>
+
+        <!-- Loading Ring 2 -->
+        <div class="ring-container ring2">
+            <div class="loading-ring">
+                <svg class="ring-svg" viewBox="0 0 80 80">
+                    <circle class="ring-bg" cx="40" cy="40" r="36"></circle>
+                    <circle class="ring-progress" cx="40" cy="40" r="36" 
+                            stroke="#00ff00" 
+                            stroke-dasharray="0 226.19"
+                            id="ring2-progress"></circle>
+                </svg>
+            </div>
+            <div class="ring-value" id="ring2-value">0</div>
+            <div class="ring-label">SISTEMA B</div>
+        </div>
+
+        <!-- Loading Ring 3 -->
+        <div class="ring-container ring3">
+            <div class="loading-ring">
+                <svg class="ring-svg" viewBox="0 0 80 80">
+                    <circle class="ring-bg" cx="40" cy="40" r="36"></circle>
+                    <circle class="ring-progress" cx="40" cy="40" r="36" 
+                            stroke="#ffff00" 
+                            stroke-dasharray="0 226.19"
+                            id="ring3-progress"></circle>
+                </svg>
+            </div>
+            <div class="ring-value" id="ring3-value">0</div>
+            <div class="ring-label">SISTEMA C</div>
+        </div>
+
+        <!-- Video Display -->
+        <div class="video-display" id="videoDisplay">
+            <!-- Video stream will be displayed here -->
+        </div>
+
+        <!-- Audio Frequency Display -->
+        <div class="frequency-display" id="frequencyDisplay">
+            <!-- Frequency bars will be generated by JavaScript -->
+        </div>
+
+        <!-- Music Player -->
+        <div class="music-player" id="musicPlayer">
+            <div class="music-left">
+                <div>PRÓXIMA:</div>
+                <div style="font-size: 11px; opacity: 0.7;">Electric Dreams</div>
+            </div>
+            <div class="music-center">
+                <div class="music-title">Synthwave Nights</div>
+                <div class="music-artist">Neon Dreams</div>
+                <div class="time-progress">
+                    <span style="font-size: 10px;">2:34</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <span style="font-size: 10px;">5:12</span>
+                </div>
+            </div>
+            <div class="music-right">
+                <div>TEMPO:</div>
+                <div>2:34 / 5:12</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize application
+        class RetroInterface {
+            constructor() {
+                this.rings = [
+                    { element: document.getElementById('ring1-progress'), value: document.getElementById('ring1-value'), current: 0 },
+                    { element: document.getElementById('ring2-progress'), value: document.getElementById('ring2-value'), current: 0 },
+                    { element: document.getElementById('ring3-progress'), value: document.getElementById('ring3-value'), current: 0 }
+                ];
+                
+                this.videoDisplay = document.getElementById('videoDisplay');
+                this.musicPlayer = document.getElementById('musicPlayer');
+                this.frequencyDisplay = document.getElementById('frequencyDisplay');
+                
+                this.init();
+            }
+
+            init() {
+                this.createFrequencyBars();
+                this.startDemo();
+            }
+
+            createFrequencyBars() {
+                const barCount = Math.floor(this.frequencyDisplay.offsetWidth / 6);
+                for (let i = 0; i < barCount; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'freq-bar';
+                    bar.style.height = '2px';
+                    bar.style.animationDelay = `${i * 0.05}s`;
+                    this.frequencyDisplay.appendChild(bar);
+                }
+            }
+
+            updateRing(ringIndex, value) {
+                if (ringIndex < 0 || ringIndex >= this.rings.length) return;
+                
+                const ring = this.rings[ringIndex];
+                const circumference = 2 * Math.PI * 36;
+                const progress = (value / 240) * circumference;
+                
+                // Color transition based on value
+                let color = '#00ffff';
+                if (value > 160) color = '#ff6600';
+                else if (value > 80) color = '#ffff00';
+                else if (value > 40) color = '#00ff00';
+                
+                ring.element.style.stroke = color;
+                ring.element.style.strokeDasharray = `${progress} ${circumference}`;
+                ring.value.textContent = Math.round(value);
+                ring.value.style.color = color;
+            }
+
+            showVideo(show = true) {
+                this.videoDisplay.style.display = show ? 'block' : 'none';
+                if (show) {
+                    this.videoDisplay.classList.add('active');
+                } else {
+                    this.videoDisplay.classList.remove('active');
+                }
+            }
+
+            showMusicPlayer(show = true) {
+                if (show) {
+                    this.musicPlayer.classList.add('active');
+                } else {
+                    this.musicPlayer.classList.remove('active');
+                }
+            }
+
+            animateFrequencyBars() {
+                const bars = this.frequencyDisplay.querySelectorAll('.freq-bar');
+                bars.forEach((bar, index) => {
+                    const height = Math.random() * 60 + 5;
+                    bar.style.height = `${height}px`;
+                });
+            }
+
+            // Demo function to show interface working
+            startDemo() {
+                // Show music player after 2 seconds
+                setTimeout(() => {
+                    this.showMusicPlayer(true);
+                }, 2000);
+
+                // Show video after 3 seconds
+                setTimeout(() => {
+                    this.showVideo(true);
+                }, 3000);
+
+                // Animate rings
+                let ring1Val = 0, ring2Val = 0, ring3Val = 0;
+                
+                const animateRings = () => {
+                    if (ring1Val < 180) {
+                        ring1Val += Math.random() * 3;
+                        this.updateRing(0, ring1Val);
+                    }
+                    
+                    if (ring2Val < 120) {
+                        ring2Val += Math.random() * 2;
+                        this.updateRing(1, ring2Val);
+                    }
+                    
+                    if (ring3Val < 200) {
+                        ring3Val += Math.random() * 4;
+                        this.updateRing(2, ring3Val);
+                    }
+                };
+
+                // Animate frequency bars
+                const animateFreq = () => {
+                    this.animateFrequencyBars();
+                };
+
+                setInterval(animateRings, 100);
+                setInterval(animateFreq, 80);
+            }
+        }
+
+        // Start application when page loads
+        window.addEventListener('load', () => {
+            window.retroInterface = new RetroInterface();
+        });
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            if (window.retroInterface) {
+                window.retroInterface.frequencyDisplay.innerHTML = '';
+                window.retroInterface.createFrequencyBars();
+            }
+        });
+    </script>
+</body>
+</html>

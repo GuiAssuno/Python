@@ -1,0 +1,191 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicação Python + Web</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #6e8efb;
+            outline: none;
+        }
+        
+        button {
+            background: linear-gradient(to right, #6e8efb, #a777e3);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 10px 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        #resultado {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #6e8efb;
+            text-align: left;
+            min-height: 60px;
+        }
+        
+        .status {
+            margin-top: 15px;
+            color: #28a745;
+            font-weight: 500;
+        }
+        
+        .error {
+            color: #dc3545;
+        }
+        
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 25px;
+            text-align: left;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Integração Python + Web</h1>
+        <p>Digite um texto para processar com Python localmente:</p>
+        
+        <div class="input-group">
+            <input type="text" id="entrada" placeholder="Digite algo aqui...">
+        </div>
+        
+        <div>
+            <button id="btn-processar">Processar com Python</button>
+            <button id="btn-limpar">Limpar</button>
+        </div>
+        
+        <div id="resultado"></div>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="instructions">
+            <p><strong>Como usar:</strong></p>
+            <p>1. Execute o script Python no terminal: <code>python app.py</code></p>
+            <p>2. O navegador abrirá automaticamente esta página</p>
+            <p>3. Digite um texto e clique em "Processar com Python"</p>
+            <p>4. O texto será processado pelo backend Python e retornado</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const entrada = document.getElementById('entrada');
+            const btnProcessar = document.getElementById('btn-processar');
+            const btnLimpar = document.getElementById('btn-limpar');
+            const resultado = document.getElementById('resultado');
+            const status = document.getElementById('status');
+            
+            btnProcessar.addEventListener('click', async function() {
+                const texto = entrada.value.trim();
+                
+                if (!texto) {
+                    status.textContent = 'Por favor, digite algo para processar.';
+                    status.className = 'status error';
+                    return;
+                }
+                
+                status.textContent = 'Processando...';
+                status.className = 'status';
+                
+                try {
+                    const response = await fetch('/api/processar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ texto: texto })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Erro no servidor');
+                    }
+                    
+                    const data = await response.json();
+                    resultado.innerHTML = `<strong>Resultado:</strong> ${data.resultado}`;
+                    status.textContent = 'Sucesso! Dados processados pelo Python.';
+                    status.className = 'status';
+                } catch (error) {
+                    status.textContent = 'Erro na comunicação com o Python. Verifique se o servidor está rodando.';
+                    status.className = 'status error';
+                    console.error('Erro:', error);
+                }
+            });
+            
+            btnLimpar.addEventListener('click', function() {
+                entrada.value = '';
+                resultado.textContent = '';
+                status.textContent = '';
+            });
+        });
+    </script>
+</body>
+</html>

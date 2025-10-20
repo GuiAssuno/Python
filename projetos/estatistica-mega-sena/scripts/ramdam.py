@@ -1,24 +1,66 @@
 import random
+import os
 
-numeros = (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60)
+pasta = 'Python/projetos/estatistica-mega-sena/arquivos'
+arquivo = 'apostas.txt'
+
+caminho = os.path.join(pasta, arquivo)
+
+'''
+NUMEROS = tuple(range(1,61)) 
 
 escolha = 0
-dezenas = ''
 dezenas = []
 
 while True:
-
-    numero = random.choice(numeros)
+    numero = random.choice(NUMEROS)
     if numero not in dezenas:
-        dezenas.append(numero)
+        dezenas.append(if (numero <= 9 ) '0' + str(numero))
 
     if len(dezenas) == 6:
         break
 
 dezenas = sorted(dezenas)
 resultado = ''
+'''
+
+NUMEROS = tuple(range(1, 61))
+dezenas = []
+resultado =''
+encontrado = False
+
+while True:
+    numero = random.choice(NUMEROS)
+
+    if numero not in dezenas:
+        if numero <= 9:
+            formatada = '0' + str(numero)
+        else:  
+            formatada = str(numero)
+        dezenas.append(formatada)
+
+    if len(dezenas) == 6:
+        break
+    
+dezenas = sorted(dezenas)
 
 for dezena in dezenas:
-    resultado += str(dezena) + ' - '
-print(resultado)
+    resultado += dezena + ' - '
+print(resultado[:-3])
+resultado = resultado[:-3]
+
+try:
+    with open(caminho, 'r', encoding='utf-8') as arq:
+        for linha in arq:
+            if resultado in linha.strip():
+                encontrado = True
+                break
+
+except FileNotFoundError:
+    print("Arquivo não encontrado.")
+
+
+if not encontrado:
+    with open(caminho, 'a', encoding='utf-8') as arq:
+        arq.write(resultado + '\n')
 

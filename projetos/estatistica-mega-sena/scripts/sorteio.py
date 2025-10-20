@@ -7,5 +7,5 @@ def rando(it, r):
     return tuple(pool[i] for i in indices)
 
 
-if __init__ == "__main__":
+if __name__ == "__main__":
     print(rando())

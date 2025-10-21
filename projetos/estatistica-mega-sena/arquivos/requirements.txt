@@ -1,0 +1,9 @@
+
+#--Web-Scraping--
+requests
+beautifulsoup4
+lxml
+
+#--Analysis--
+pandas
+numpy

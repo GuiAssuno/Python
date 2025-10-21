@@ -1,66 +1,59 @@
 import random
 import os
 
-pasta = 'Python/projetos/estatistica-mega-sena/arquivos'
-arquivo = 'apostas.txt'
 
-caminho = os.path.join(pasta, arquivo)
 
-'''
-NUMEROS = tuple(range(1,61)) 
+class gerador_de_dezenas:
+    def __init__(self):
+        self.NUMEROS = tuple(range(1, 61))
+        self.resultado =''
+        self.encontrado = False
 
-escolha = 0
-dezenas = []
+    def gerador(self):
+        dezenas = []
 
-while True:
-    numero = random.choice(NUMEROS)
-    if numero not in dezenas:
-        dezenas.append(if (numero <= 9 ) '0' + str(numero))
+        while True:
+            numero = random.choice(self.NUMEROS)
 
-    if len(dezenas) == 6:
-        break
+            if numero not in dezenas:
+                dezenas.append(str(numero).zfill(2))
 
-dezenas = sorted(dezenas)
-resultado = ''
-'''
-
-NUMEROS = tuple(range(1, 61))
-dezenas = []
-resultado =''
-encontrado = False
-
-while True:
-    numero = random.choice(NUMEROS)
-
-    if numero not in dezenas:
-        if numero <= 9:
-            formatada = '0' + str(numero)
-        else:  
-            formatada = str(numero)
-        dezenas.append(formatada)
-
-    if len(dezenas) == 6:
-        break
-    
-dezenas = sorted(dezenas)
-
-for dezena in dezenas:
-    resultado += dezena + ' - '
-print(resultado[:-3])
-resultado = resultado[:-3]
-
-try:
-    with open(caminho, 'r', encoding='utf-8') as arq:
-        for linha in arq:
-            if resultado in linha.strip():
-                encontrado = True
+            if len(dezenas) == 6:
                 break
+            
+        dezenas = sorted(dezenas)
+        self.resultado = ' - '.join(dezenas)
 
-except FileNotFoundError:
-    print("Arquivo não encontrado.")
+        return self.resultado
+
+    def salvar (self, caminho):
+        
+        pasta = 'Python/projetos/estatistica-mega-sena/arquivos'
+        arquivo = 'apostas.txt'
+        caminho = os.path.join(pasta, arquivo)
+
+        try:
+            with open(caminho, 'r', encoding='utf-8') as arq:
+                for linha in arq:
+                    if self.resultado in linha.strip():
+                        self.encontrado = True
+                        break
+
+        except FileNotFoundError:
+            return "Arquivo não encontrado."
+
+        if not self.encontrado:
+            
+            try:
+                with open(caminho, 'a', encoding='utf-8') as arq:
+                    arq.write(self.resultado + '\n')
+            
+            except Exception as e:
+                return f"Não foi possivel gravar no arquivo - {e}"
 
 
-if not encontrado:
-    with open(caminho, 'a', encoding='utf-8') as arq:
-        arq.write(resultado + '\n')
+if __name__ == '__main__':
+    
+    resultado = gerador_de_dezenas()
 
+    print(resultado.gerador())

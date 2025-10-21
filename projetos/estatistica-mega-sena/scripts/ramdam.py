@@ -1,8 +1,6 @@
 import random
 import os
 
-
-
 class gerador_de_dezenas:
     def __init__(self):
         self.NUMEROS = tuple(range(1, 61))
@@ -55,5 +53,4 @@ class gerador_de_dezenas:
 if __name__ == '__main__':
     
     resultado = gerador_de_dezenas()
-
     print(resultado.gerador())

@@ -24,11 +24,20 @@ class gerador_de_dezenas:
 
         return self.resultado
 
-    def salvar (self, caminho):
+    def salvar (self, pasta = None, arquivo = 'apostas.txt'):
         
-        pasta = 'Python/projetos/estatistica-mega-sena/arquivos'
-        arquivo = 'apostas.txt'
-        caminho = os.path.join(pasta, arquivo)
+        if (pasta == None):
+            try:
+                import pathlib
+
+                caminho_abs_arquivo = pathlib.Path(__file__).resolve()
+                pasta = caminho_abs_arquivo.parent.parent
+                caminho = pasta / 'arquivos' / arquivo
+                print(caminho)
+            except:
+                return 0
+        else:
+            caminho = os.path.join(pasta, arquivo)
 
         try:
             with open(caminho, 'r', encoding='utf-8') as arq:
@@ -44,7 +53,7 @@ class gerador_de_dezenas:
             
             try:
                 with open(caminho, 'a', encoding='utf-8') as arq:
-                    arq.write(self.resultado + '\n')
+                    arq.write(f"|    {self.resultado}    |                          |                       |                     |\n")
             
             except Exception as e:
                 return f"Não foi possivel gravar no arquivo - {e}"
@@ -54,3 +63,4 @@ if __name__ == '__main__':
     
     resultado = gerador_de_dezenas()
     print(resultado.gerador())
+    print(resultado.salvar())

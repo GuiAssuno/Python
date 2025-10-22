@@ -1,6 +1,42 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import gerador_de_numeros as gn
+
+salvar = gn.gerador_de_dezenas()
+
+import re
+
+# Sua string de dados
+dados = "2735 - 11/06/2024 - 05 33 46 47 53 592731 - 01/06/2024 - 04 12 32 45 49 58"
+
+import re
+
+# Sua string de dados
+dados = "2735 - 11/06/2024 - 05 33 46 47 53 592731 - 01/06/2024 - 04 12 32 45 49 58"
+
+# Solução simples e direta
+def separar_registros(texto):
+    # Adiciona espaço entre registros quando um termina com 2 dígitos e outro começa com número
+    texto = re.sub(r'(\d{2})(\d+)', r'\1 \2', texto)
+    
+    # Divide por espaços múltiplos e filtra
+    partes = texto.split()
+    registros = []
+    
+    # Reconstrói os registros (cada registro tem 11 partes: N, -, DD, /, MM, /, AAAA, -, NN, NN, NN, NN, NN, NN)
+    i = 0
+    while i < len(partes):
+        if partes[i].isdigit() and i + 12 < len(partes):
+            registro = f"{partes[i]} - {partes[i+1]} {partes[i+2]} {partes[i+3]} {partes[i+4]} {partes[i+5]} - {partes[i+6]} {partes[i+7]} {partes[i+8]} {partes[i+9]} {partes[i+10]} {partes[i+11]}"
+            registros.append(registro)
+            i += 12
+        else:
+            i += 1
+    
+    return registros
+
+
 
 def coletar_dados_site(url, tag_alvo, classe_alvo):
     """
@@ -17,8 +53,7 @@ def coletar_dados_site(url, tag_alvo, classe_alvo):
     dados_coletados = []
 
     try:
-        # 1. FAZER A REQUISIÇÃO PARA O SITE
-        # O cabeçalho 'User-Agent' ajuda a simular um navegador real, evitando bloqueios.
+
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
         response = requests.get(url, headers=headers, timeout=10)
         
@@ -42,7 +77,9 @@ def coletar_dados_site(url, tag_alvo, classe_alvo):
         for elemento in elementos_encontrados:
             # .text extrai apenas o texto de dentro da tag
             texto = elemento.text.strip() # .strip() remove espaços em branco extras
-            dados_coletados.append(texto)
+            resultado = separar_registros(texto)
+            print(len(resultado))
+            dados_coletados.append(resultado)
             
         print(f"{len(dados_coletados)} itens encontrados e extraídos.")
         return dados_coletados
@@ -58,22 +95,25 @@ def coletar_dados_site(url, tag_alvo, classe_alvo):
 # --- COMO USAR A FUNÇÃO ---
 
 # Defina os parâmetros para o site que você quer coletar (Exemplo: G1)
-url_alvo = 'https://g1.globo.com/'
+url_alvo = 'https://asloterias.com.br/lista-de-resultados-da-mega-sena'
 # Com base na nossa inspeção, a tag é 'a' e a classe é 'feed-post-link'
-tag = 'a'
-classe = 'feed-post-link'
+tag = 'div'            
+classe = 'col-md-8'   #quesquisando no google MDTDab
 
 # Chama a função
 titulos_g1 = coletar_dados_site(url_alvo, tag, classe)
-print(titulos_g1)
+print(len(titulos_g1))
 # Se a coleta funcionou, vamos salvar os dados em um CSV usando pandas
 if titulos_g1:
     # Cria um DataFrame do pandas
-    df = pd.DataFrame(titulos_g1, columns=['Manchetes'])
-    print(df.describe())
+    #df = pd.DataFrame(titulos_g1, columns=['Manchetes'])
+    #print(df.describe())
     # Salva em um arquivo CSV
-    df.to_csv('manchetes_g1.csv', index=False, encoding='utf-8')
+    #df.to_csv('manchetes_g1.csv')
+    print(salvar.salvar(titulos_g1,"/home/lola/VScode/Python/projetos/estatistica-mega-sena/arquivos",arquivo="scrape.txt"))
     
-    print("\n--- Primeiras 5 manchetes coletadas: ---")
-    print(df.head())
-    print("\nDados salvos com sucesso no arquivo 'manchetes_g1.csv'!")
+    
+    
+ #   print("\n--- Primeiras 5 manchetes coletadas: ---")
+  #  print(df.head())
+   # print("\nDados salvos com sucesso no arquivo 'manchetes_g1.csv'!")

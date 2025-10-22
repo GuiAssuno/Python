@@ -24,7 +24,7 @@ class gerador_de_dezenas:
 
         return self.resultado
 
-    def salvar (self, pasta = None, arquivo = 'apostas.txt'):
+    def salvar (self, conteudo, pasta = None, arquivo = 'apostas.txt'):
         
         if (pasta == None):
             try:
@@ -42,18 +42,18 @@ class gerador_de_dezenas:
         try:
             with open(caminho, 'r', encoding='utf-8') as arq:
                 for linha in arq:
-                    if self.resultado in linha.strip():
+                    if conteudo in linha.strip():
                         self.encontrado = True
                         break
 
-        except FileNotFoundError:
-            return "Arquivo não encontrado."
+        except:
+            print ("ERRO PARA GRAVAR - Arquivo não encontrado.")
 
         if not self.encontrado:
             
             try:
                 with open(caminho, 'a', encoding='utf-8') as arq:
-                    arq.write(f"|    {self.resultado}    |                          |                       |                     |\n")
+                    arq.write(f"|    {conteudo}    |                          |                       |                     |\n")
             
             except Exception as e:
                 return f"Não foi possivel gravar no arquivo - {e}"

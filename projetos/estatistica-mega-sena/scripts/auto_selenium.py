@@ -83,3 +83,30 @@ if dados:
 
 
 #'''
+
+
+
+"""
+from selenium import webdriver
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from webdriver_manager.firefox import GeckoDriverManager
+
+# Importações essenciais para o modo headless do Firefox
+from selenium.webdriver.firefox.options import Options
+
+# --- 1. Configuração das Opções Headless ---
+ff_options = Options()
+ff_options.add_argument("--headless") # A linha mais importante!
+
+# --- 2. Inicialização do Driver ---
+driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=ff_options)
+print("Driver do Firefox iniciado em modo headless.")
+
+# --- 3. O resto do seu código ---
+url = 'http://quotes.toscrape.com/js/'
+driver.get(url)
+print(f"Título da página: {driver.title}")
+
+# --- 4. Fechamento ---
+driver.quit()
+"""

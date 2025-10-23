@@ -79,9 +79,7 @@ classe = 'col-md-8'   #quesquisando no google MDTDab
 dados_brutos = coletar_dados_site(url_alvo, tag, classe)
 print(len(dados_brutos))
 
-caminho_abs_arquivo = pathlib.Path(__file__).resolve()
-pasta = caminho_abs_arquivo.parent.parent
-caminho_sorteios =  pasta / 'arquivos' / 'scrape.txt'
+caminho_sorteios = (pathlib.Path(__file__).resolve().parent.parent) / 'arquivos' / 'scrape.txt'
 atualizar = True
 
 with open(caminho_sorteios, 'r') as c:

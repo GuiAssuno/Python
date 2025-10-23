@@ -82,13 +82,16 @@ print(len(dados_brutos))
 caminho_sorteios = (pathlib.Path(__file__).resolve().parent.parent) / 'arquivos' / 'scrape.txt'
 atualizar = True
 
-with open(caminho_sorteios, 'r') as c:
-    numeros_de_linhas = len(c.readlines())
-    if len(dados_brutos) <= numeros_de_linhas:
-        atualizar = False
+try:
+    with open(caminho_sorteios, 'r') as c:
+        numeros_de_linhas = len(c.readlines())
+        if len(dados_brutos) <= numeros_de_linhas:
+            atualizar = False
 
-    if not numeros_de_linhas: 
-        salvar.salvar(dados_brutos,arquivo="scrape.txt")
+        if not numeros_de_linhas: 
+            salvar.salvar(dados_brutos,arquivo="scrape.txt")
 
-    if atualizar:
-        print(salvar.salvar(dados_brutos,arquivo="scrape.txt"))
+        if atualizar:
+            print(salvar.salvar(dados_brutos,arquivo="scrape.txt"))
+except:
+     salvar.salvar(dados_brutos,arquivo="scrape.txt")

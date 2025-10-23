@@ -2,30 +2,30 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import gerador_de_numeros as gn
+import re
 
 salvar = gn.gerador_de_dezenas()
-
-import re
-
-# Sua string de dados
-dados = "2735 - 11/06/2024 - 05 33 46 47 53 592731 - 01/06/2024 - 04 12 32 45 49 58"
-
-import re
 
 # Sua string de dados
 dados = "2735 - 11/06/2024 - 05 33 46 47 53 592731 - 01/06/2024 - 04 12 32 45 49 58"
 
 # Solução simples e direta
-def separar_registros(texto):
+def separar_registros(dados):
     # Adiciona espaço entre registros quando um termina com 2 dígitos e outro começa com número
-    texto = re.sub(r'(\d{2})(\d+)', r'\1 \2', texto)
-    
+    print(dados)
+    padrao = r"\d{4} - \d{2}/\d{2}/\d{4} -  \d{2}(?: \d{2}){5}"
+
+    texto = re.findall(padrao, dados)
+    #texto = re.findall(r"\d{4} - \d{2}/\d{2}/\d{4} - \d{2}(?: \d{2}){5}", dados)
+    print(texto)
     # Divide por espaços múltiplos e filtra
-    partes = texto.split()
+    partes = texto
+    print(partes)
     registros = []
     
     # Reconstrói os registros (cada registro tem 11 partes: N, -, DD, /, MM, /, AAAA, -, NN, NN, NN, NN, NN, NN)
     i = 0
+    print (len(partes))
     while i < len(partes):
         if partes[i].isdigit() and i + 12 < len(partes):
             registro = f"{partes[i]} - {partes[i+1]} {partes[i+2]} {partes[i+3]} {partes[i+4]} {partes[i+5]} - {partes[i+6]} {partes[i+7]} {partes[i+8]} {partes[i+9]} {partes[i+10]} {partes[i+11]}"
@@ -33,7 +33,7 @@ def separar_registros(texto):
             i += 12
         else:
             i += 1
-    
+    print (registro)
     return registros
 
 
@@ -42,9 +42,9 @@ def coletar_dados_site(url, tag_alvo, classe_alvo):
     """
     Função genérica para fazer web scraping em um site.
     
-    :param url: A URL completa do site que você quer analisar.
-    :param tag_alvo: A tag HTML onde o dado está (ex: 'h2', 'a', 'div').
-    :param classe_alvo: A classe CSS do elemento para filtrar (ex: 'post-title').
+    :url: A URL completa do site que você quer analisar.
+    :tag_alvo: A tag HTML onde o dado está (ex: 'h2', 'a', 'div').
+    :classe_alvo: A classe CSS do elemento para filtrar (ex: 'post-title').
     :return: Uma lista com os textos dos elementos encontrados.
     """
     print(f"Iniciando a coleta de dados da URL: {url}")
@@ -110,7 +110,7 @@ if titulos_g1:
     #print(df.describe())
     # Salva em um arquivo CSV
     #df.to_csv('manchetes_g1.csv')
-    print(salvar.salvar(titulos_g1,"/home/lola/VScode/Python/projetos/estatistica-mega-sena/arquivos",arquivo="scrape.txt"))
+    print(salvar.salvar(titulos_g1,arquivo="scrape.txt"))
     
     
     

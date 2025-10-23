@@ -50,11 +50,18 @@ class gerador_de_dezenas:
             print ("ERRO PARA GRAVAR - Arquivo não encontrado.")
 
         if not self.encontrado:
-            
             try:
                 with open(caminho, 'a', encoding='utf-8') as arq:
-                    arq.write(f"|    {conteudo}    |                          |                       |                     |\n")
-            
+                    
+                    
+                    if (type(conteudo) == list):
+                        
+                        for linha in conteudo:
+                            print(type(conteudo))
+                            arq.write(f"{linha}\n")
+                    else:       
+                        arq.write(f"|    {conteudo}    |                          |                       |                     |\n")
+                    
             except Exception as e:
                 return f"Não foi possivel gravar no arquivo - {e}"
 
@@ -62,5 +69,4 @@ class gerador_de_dezenas:
 if __name__ == '__main__':
     
     resultado = gerador_de_dezenas()
-    print(resultado.gerador())
-    print(resultado.salvar())
+    print(resultado.salvar(resultado.gerador()))

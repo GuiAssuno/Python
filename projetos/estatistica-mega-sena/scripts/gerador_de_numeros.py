@@ -1,5 +1,7 @@
 import random
 import os
+import pathlib
+import re
 
 class gerador_de_dezenas:
     def __init__(self):
@@ -25,46 +27,59 @@ class gerador_de_dezenas:
         return self.resultado
 
     def salvar (self, conteudo, pasta = None, arquivo = 'apostas.txt'):
-        
-        if (pasta == None):
-            try:
-                import pathlib
 
-                caminho_abs_arquivo = pathlib.Path(__file__).resolve()
-                pasta = caminho_abs_arquivo.parent.parent
-                caminho = pasta / 'arquivos' / arquivo
-                print(caminho)
-            except:
-                return 0
-        else:
-            caminho = os.path.join(pasta, arquivo)
+        caminho_abs_arquivo = pathlib.Path(__file__).resolve()
+        pasta = caminho_abs_arquivo.parent.parent
+        caminho = pasta / 'arquivos' / arquivo
+        caminho_sorteios =  pasta / 'arquivos' / 'scrape.txt'
 
+        padrao = r'\d{2} - \d{2} - \d{2} - \d{2} - \d{2} - \d{2}'
         try:
-            with open(caminho, 'r', encoding='utf-8') as arq:
-                for linha in arq:
-                    if conteudo in linha.strip():
-                        self.encontrado = True
-                        break
+            if re.search (padrao, conteudo):
+                try:
+                    
+                    print(caminho)
+                except:
+                    return 0
 
-        except:
-            print ("ERRO PARA GRAVAR - Arquivo não encontrado.")
+                try:
+                    # VERIFICA SE É REPETIDO
+                    with open(caminho, 'r', encoding='utf-8') as arq:
+                        for linha in arq:
+                            if conteudo in linha.strip():
+                                self.encontrado = True
+                                break
+                    
+                    # VERIFICA SE EXISTE
+                    with open (caminho_sorteios, 'r', encoding='utf-8') as sorteios:
+                        for sorteio_realizado in sorteios:
+                            if conteudo == sorteio_realizado[-17]:
+                                return "ja foi sorteado"
 
-        if not self.encontrado:
+                except:
+                    print ("ERRO NA LEITURA DO ARQUIVO")
+
+
+                if not self.encontrado:
+                    try:
+
+                        with open(caminho, 'a', encoding='utf-8') as arq:     
+                                arq.write(f"|    {conteudo}    |                          |                       |                     |\n")
+                            
+                    except Exception as e:
+                        return f"Não foi possivel gravar no arquivo - {e}"
+            
+        
+        except TypeError as e:
+            print (f"Erro: {e}")            
+            
             try:
-                with open(caminho, 'a', encoding='utf-8') as arq:
-                    
-                    
-                    if (type(conteudo) == list):
-                        
-                        for linha in conteudo:
-                            print(type(conteudo))
-                            arq.write(f"{linha}\n")
-                    else:       
-                        arq.write(f"|    {conteudo}    |                          |                       |                     |\n")
-                    
-            except Exception as e:
-                return f"Não foi possivel gravar no arquivo - {e}"
+                with open (caminho_sorteios, 'w', encoding='utf-8') as sorteios:
+                    for linha in conteudo:
+                        sorteios.write(f"{linha}\n")
 
+            except Exception as e:
+                return f"não funciou {e}"            
 
 if __name__ == '__main__':
     

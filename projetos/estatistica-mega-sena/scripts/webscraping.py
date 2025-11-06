@@ -54,7 +54,7 @@ def coletar_dados_site(url, tag_alvo, classe_alvo):
             return []
         
         # 4. EXTRAIR A INFORMAÇÃO
-        padrao = r"\d{4} - \d{2}/\d{2}/\d{4} -  \d{2}(?: \d{2}){5}"
+        padrao = r"\d{2}(?: \d{2}){5}"
         
         for elemento in elementos_encontrados:
             # .text extrai apenas o texto de dentro da tag

@@ -1,7 +1,7 @@
 WOLFRAM_ALPHA_APP_ID = "seu_app_id_aqui"  # Opcional para perguntas factuais
 
 # API Keys
-OPENWEATHER_API_KEY = "s"  
+OPENWEATHER_API_KEY = "w"  
 
 # Configurações do servidor
 HOST = "0.0.0.0"
